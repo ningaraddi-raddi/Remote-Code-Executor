@@ -1,0 +1,17 @@
+# Ignore Node.js dependencies and artifacts
+node_modules
+npm-debug.log
+.env
+package-lock.json
+
+# Ignore temporary files
+temp
+tmp
+
+# Ignore Git-related files
+.git
+.gitignore
+
+# Ignore IDE configuration files
+.vscode
+.idea

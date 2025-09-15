@@ -1,0 +1,21 @@
+# Node.js
+node_modules
+npm-debug.log
+.env
+
+# Logs and temporary files
+logs
+*.log
+temp
+tmp
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Docker and other
+docker-compose.yml.orig
+docker-compose.yml.bak
