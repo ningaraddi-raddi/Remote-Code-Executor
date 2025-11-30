@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Docker logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

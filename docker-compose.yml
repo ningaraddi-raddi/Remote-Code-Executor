@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # -----------------------------
+  # 1. REDIS (State Store)
+  # -----------------------------
+  redis:
+    image: redis:alpine
+    container_name: redis_store
+    ports:
+      - "6379:6379"
+    networks:
+      - executor-network
+
+  # -----------------------------
+  # 2. RABBITMQ (Message Queue)
+  # -----------------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_queue
+    ports:
+      - "5672:5672"   # App communication port
+      - "15672:15672" # Dashboard UI (User: guest / Pass: guest)
+    networks:
+      - executor-network
+
+  # -----------------------------
+  # 3. API SERVICE (Ingestion)
+  # -----------------------------
+  api-service:
+    build: ./api-service
+    container_name: api_container
+    restart: always
+    environment:
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://rabbitmq
+      - PORT=3000
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - executor-network
+
+  # -----------------------------
+  # 4. WORKER SERVICE (Execution)
+  # -----------------------------
+  worker-service:
+    build: ./worker-service
+    container_name: worker_container
+    restart: always
+    user: root # Required to access docker socket
+    volumes:
+      # ⚠️ CRITICAL: Mount Host Docker Socket so Worker can spawn containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REDIS_HOST=redis
+      - RABBITMQ_URL=amqp://rabbitmq
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - executor-network
+
+  # -----------------------------
+  # 5. GATEWAY (NGINX Ingress)
+  # -----------------------------
+  gateway:
+    image: nginx:alpine
+    container_name: gateway_ingress
+    ports:
+      - "8080:80" # Exposed to your localhost
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api-service
+    networks:
+      - executor-network
+
+networks:
+  executor-network:
+    driver: bridge
