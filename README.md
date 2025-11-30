@@ -1,9 +1,7 @@
-```markdown
+
 # Remote Code Execution Engine
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
-[![Status](https://img.shields.io/badge/status-alpha-orange.svg)]()
+![NodeJS](https://img.shields.io/badge/Node.js-18.x-green) ![Docker](https://img.shields.io/badge/Docker-Enabled-blue) ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message%20Queue-orange) ![Redis](https://img.shields.io/badge/Redis-Caching-red) ![Nginx](https://img.shields.io/badge/NGINX-Gateway-green) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 A robust, scalable asynchronous code execution platform inspired by systems like LeetCode, Judge0, and HackerRank. This engine securely runs user-submitted code inside ephemeral Docker sandboxes and uses a microservices architecture for reliability and scale.
 
@@ -117,7 +115,6 @@ Base: http://localhost:8080
   "submittedAt": "2025-11-30T10:00:00.000Z"
 }
 ```
-
 Notes
 - The API returns a jobId which you can poll via the /api/status endpoint.
 - For large outputs or logs you may store truncated or paginated results to Redis or a blob storage.
@@ -131,6 +128,7 @@ remote-code-executor/
 ├── gateway/              # NGINX reverse proxy
 ├── docker-compose.yml    # Orchestrates all services
 └── README.md             # Documentation
+
 ```
 
 ## How it works (Simplified)
@@ -171,4 +169,4 @@ Pull requests and suggestions are welcome. Please:
 
 This project is open-source and available under the MIT License.
 
-```
+
