@@ -1,52 +1,161 @@
-# 🚀 Remote Code Execution Engine
+Remote Code Execution Engine
 
-![NodeJS](https://img.shields.io/badge/Node.js-18.x-green) ![Docker](https://img.shields.io/badge/Docker-Enabled-blue) ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message%20Queue-orange) ![Redis](https://img.shields.io/badge/Redis-Caching-red) ![Nginx](https://img.shields.io/badge/NGINX-Gateway-green)
 
-A robust, scalable **asynchronous code execution system** (similar to the engine behind LeetCode or Judge0). Built using a microservices architecture, it allows users to submit code in various languages, executes them safely inside isolated ephemeral Docker containers, and returns the output.
 
----
 
-## 🏗 Architecture & Design
 
-The system follows the **Producer-Consumer** pattern to handle high concurrency. It decouples the ingestion layer (API) from the execution layer (Worker), ensuring the server remains responsive even under heavy load.
 
-```mermaid
-graph LR
-    User[Client] -- POST /execute --> NGINX[NGINX Gateway]
-    NGINX --> API[API Service]
-    API -- Push Job --> RMQ[(RabbitMQ)]
-    API -- Set Status --> Redis[(Redis)]
-    
-    RMQ -- Pull Job --> Worker[Worker Service]
-    Worker -- Spawn --> Sandbox[Docker Sandbox]
-    
-    Sandbox -- Output --> Worker
-    Worker -- Update Status --> Redis
-    
-    User -- Polling --> API
-    API -- Get Result --> Redis
-Key ComponentsComponentTech StackRoleIngress GatewayNGINXReverse proxy, request routing, and future load balancing.API ServiceNode.js / ExpressHandles HTTP requests, validation, and pushes jobs to the queue.Message BrokerRabbitMQBuffers incoming jobs to prevent system overload (Backpressure).Worker ServiceNode.jsConsumes jobs and manages the lifecycle of Docker containers.RuntimeDocker (Alpine)executes user code in isolated, network-restricted containers.State StoreRedisFast read/write storage for job status (Pending -> Processing -> Completed).✨ FeaturesMulti-Language Support: Currently supports Python, JavaScript (Node.js), and Bash.Sandboxing: Code runs in isolated containers with no network access (--network none) and limited resources (CPU/RAM caps).Horizontal Scalability: The Worker Service can be scaled up (e.g., docker-compose up --scale worker=5) to handle higher throughput.Fault Tolerance: RabbitMQ persistence ensures jobs aren't lost if the worker crashes.🛠 Installation & SetupPrerequisitesDocker & Docker Compose installed.1. Clone the RepositoryBashgit clone [https://github.com/ningaraddi-raddi/Remote-Code-Executor.git](https://github.com/ningaraddi-raddi/Remote-Code-Executor.git)
+
+
+
+
+A robust, scalable asynchronous code execution platform inspired by systems like LeetCode, Judge0, and HackerRank.
+This engine securely executes user-submitted code inside isolated Docker sandboxes, managed through a modern microservices architecture.
+
+🏗️ Architecture Overview
+
+The system uses a Producer–Consumer model for fault tolerance and scalability.
+The API never directly executes code; instead, it offloads jobs to RabbitMQ, and Workers asynchronously execute them inside Docker containers.
+
+🧩 Key Components
+Component	Tech	Responsibility
+Ingress Gateway	NGINX	Reverse-proxy, routing, load balancing
+API Service	Node.js (Express)	Receives jobs, validates input, pushes tasks to RabbitMQ
+RabbitMQ	Message Broker	Job queueing + backpressure
+Worker Service	Node.js	Consumes tasks, executes code in Docker
+Sandbox Runtime	Docker	Isolated container execution (network disabled, limited resources)
+Redis	Cache	Stores job states: Pending → Processing → Completed
+✨ Features
+
+🖥️ Multi-language support (Python, JavaScript, Bash)
+
+🛡️ Full sandboxing via Docker
+
+🔌 No network access inside containers (--network none)
+
+⚖️ Resource limits (128MB RAM, 1 CPU core)
+
+📦 Persistent RabbitMQ queue (crash-safe)
+
+📈 Horizontal scalability (docker-compose up --scale worker=5)
+
+⚡ Fast result fetching through Redis
+
+🛡️ Security Measures
+
+Isolated execution inside ephemeral containers
+
+Network disabled containers
+
+Timeout-based execution kill (prevents infinite loops)
+
+Memory + CPU limits
+
+Base64 encoded user code to prevent command injection
+
+Strict validation for incoming payloads
+
+📦 Installation & Setup
+✅ Prerequisites
+
+Docker
+
+Docker Compose
+
+1️⃣ Clone the Project
+git clone https://github.com/ningaraddi-raddi/Remote-Code-Executor.git
 cd Remote-Code-Executor
-2. Run with Docker ComposeThis command builds the images and starts all 5 services (API, Worker, Redis, RabbitMQ, Nginx).Bashdocker-compose up --build
-🔌 API Documentation1. Execute CodeEndpoint: POST /api/executeRequest Body:JSON{
+
+2️⃣ Run All Services
+
+Start API, Worker, Redis, RabbitMQ, and the Gateway:
+
+docker-compose up --build
+
+
+All services are available via:
+
+http://localhost:8080
+
+🔌 API Documentation
+1. Submit Code for Execution
+
+Endpoint:
+POST /api/execute
+
+Request Body:
+
+{
   "language": "python",
-  "code": "print('Hello from the Isolated Docker Sandbox!')"
+  "code": "print('Hello from the sandbox!')"
 }
-Response:JSON{
+
+
+Response:
+
+{
   "jobId": "550e8400-e29b-41d4-a716-446655440000",
   "status": "Pending",
   "message": "Job submitted successfully"
 }
-2. Check Status / Get ResultEndpoint: GET /api/status/:jobIdResponse (Processing):JSON{ "status": "Processing" }
-Response (Success):JSON{
+
+2. Check Job Status
+
+Endpoint:
+GET /api/status/:jobId
+
+Response (Processing)
+{ "status": "Processing" }
+
+Response (Completed)
+{
   "status": "Completed",
-  "output": "Hello from the Isolated Docker Sandbox!\n",
+  "output": "Hello from the sandbox!\n",
   "submittedAt": "2025-11-30T10:00:00.000Z"
 }
-📂 Project StructurePlaintext/remote-code-executor
-├── /api-service        # Express API (Producer)
-├── /worker-service     # Node.js Worker (Consumer + Dockerode)
-├── /gateway            # NGINX Configuration
-├── docker-compose.yml  # Container Orchestration
-└── README.md           # Documentation
-🛡 Security Measures implementedNetwork Isolation: Sandbox containers have no internet access.Resource Limits: Containers are capped at 128MB RAM and 1 CPU core to prevent DoS (infinite loops).Ephemeral Filesystem: Containers are destroyed immediately after execution.Base64 Encoding: Source code is passed via Base64 injection to prevent command injection attacks.🚀 Future Roadmap[ ] Add WebSockets for real-time result streaming (removing polling).[ ] Implement Warm Pools of containers to reduce startup latency.[ ] Add Authentication (JWT) to rate-limit users.
+
+📂 Project Structure
+remote-code-executor/
+├── api-service/          # Express API (Producer)
+├── worker-service/       # Worker + Docker execution logic
+├── gateway/              # NGINX reverse proxy
+├── docker-compose.yml    # Orchestrates all services
+└── README.md             # Documentation
+
+🧠 How It Works (Simplified)
+
+User submits code → API validates request
+
+API generates jobId and sets job as Pending in Redis
+
+API pushes job to RabbitMQ
+
+Worker pulls job → Creates a Docker sandbox
+
+Code executes with limited CPU/RAM
+
+Worker updates Redis with job result
+
+User polls /api/status/:jobId for output
+
+🚀 Future Improvements
+
+ WebSockets for real-time logs
+
+ Warm Docker container pools (faster execution)
+
+ JWT-based authentication & rate limiting
+
+ More languages (C++, Java, Go, Rust)
+
+ Multi-file project execution
+
+ Per-user execution quotas
+
+🤝 Contributing
+
+Pull requests and suggestions are welcome!
+
+📄 License
+
+This project is open-source and available under the MIT License.
