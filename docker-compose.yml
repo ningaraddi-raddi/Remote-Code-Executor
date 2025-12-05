@@ -46,7 +46,8 @@ services:
   # -----------------------------
   worker-service:
     build: ./worker-service
-    container_name: worker_container
+
+
     restart: always
     user: root # Required to access docker socket
     volumes:
