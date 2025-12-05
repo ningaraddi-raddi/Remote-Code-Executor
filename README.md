@@ -1,172 +1,130 @@
-
 # Remote Code Execution Engine
 
-![NodeJS](https://img.shields.io/badge/Node.js-18.x-green) ![Docker](https://img.shields.io/badge/Docker-Enabled-blue) ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message%20Queue-orange) ![Redis](https://img.shields.io/badge/Redis-Caching-red) ![Nginx](https://img.shields.io/badge/NGINX-Gateway-green) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![React](https://img.shields.io/badge/React-18-blue) ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-cyan) ![NodeJS](https://img.shields.io/badge/Node.js-18.x-green) ![Docker](https://img.shields.io/badge/Docker-Enabled-blue) ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Message%20Queue-orange) ![Redis](https://img.shields.io/badge/Redis-Caching-red) ![Nginx](https://img.shields.io/badge/NGINX-Gateway-green)
 
-A robust, scalable asynchronous code execution platform inspired by systems like LeetCode, Judge0, and HackerRank. This engine securely runs user-submitted code inside ephemeral Docker sandboxes and uses a microservices architecture for reliability and scale.
+A powerful, full-stack remote code execution platform. This project provides a beautiful, IDE-like web interface where users can write code in multiple languages (JavaScript, Python, Java, etc.) and execute it securely in isolated Docker containers.
 
-Table of Contents
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Security](#security)
-- [Quickstart](#quickstart)
-- [API](#api)
-- [Project Structure](#project-structure)
-- [How it works](#how-it-works)
-- [Future improvements](#future-improvements)
-- [Contributing](#contributing)
-- [License](#license)
+## 🚀 Features
 
-## Overview
+-   **Modern Frontend**: Built with **React**, **Vite**, and **Tailwind CSS**. Features a dark-themed, responsive UI.
+-   **Monaco Editor**: Integrated **VS Code-like editor** with syntax highlighting and intelligent features.
+-   **Secure Execution**: User code runs inside **ephemeral Docker containers** with no network access and strict resource limits (RAM/CPU).
+-   **Microservices Architecture**:
+    -   **API Service**: Handles HTTP requests and queues jobs.
+    -   **Worker Service**: Consumes jobs from RabbitMQ and manages Docker containers.
+    -   **Gateway**: NGINX reverse proxy for routing and CORS management.
+-   **Scalable**: Uses **RabbitMQ** for job queuing and **Redis** for fast state management.
 
-This project implements a Producer–Consumer model where an API accepts jobs and workers execute them asynchronously. The API pushes jobs to RabbitMQ; workers consume the jobs and run the code inside restricted Docker containers. Redis is used as a fast job state store.
+## 🏗 Architecture
 
-## Architecture
+The system follows a Producer-Consumer pattern:
 
-- Ingress Gateway: NGINX — reverse proxy, routing and load balancing
-- API Service: Node.js (Express) — validates input and enqueues jobs
-- Message Broker: RabbitMQ — reliable job queue with persistence and backpressure
-- Worker Service: Node.js — consumes jobs and executes code inside Docker sandboxes
-- Sandbox Runtime: Docker — isolated execution (network disabled)
-- Cache / State Store: Redis — stores job states and results
 
-A simplified flow:
-User → API → RabbitMQ → Worker → Docker Sandbox → Redis → User polls API for result
+<img width="1184" height="742" alt="image" src="https://github.com/user-attachments/assets/26801382-1e47-43b5-ae08-3287853bb513" />
 
-## Features
 
-- Multi-language support: Python, JavaScript, Bash (extendable)
-- Full sandboxing using Docker
-- No network access inside containers (--network none)
-- Resource limits (example: 128MB RAM, 1 CPU core)
-- Persistent RabbitMQ queues (crash-safe)
-- Horizontal scaling (e.g., docker-compose up --scale worker=5)
-- Fast result lookup via Redis
-- Timeout-based execution and automatic termination for runaway processes
+## 🛠 Tech Stack
 
-## Security
+### Frontend
+-   **React** (Vite): Fast, modern UI library.
+-   **Tailwind CSS**: Utility-first styling for a sleek design.
+-   **Monaco Editor**: The power of VS Code in the browser.
+-   **Axios**: For API communication.
+-   **Lucide React**: Beautiful icons.
 
-- Ephemeral isolated containers per job
-- Disabled container networking
-- CPU and memory limits enforced by Docker
-- Execution timeouts to avoid infinite loops
-- Base64-encoded user code to reduce command injection risk
-- Strict validation of incoming payloads at the API layer
-- Workers run with minimal permissions (follow the principle of least privilege)
+### Backend
+-   **Node.js & Express**: API handling.
+-   **RabbitMQ**: Asynchronous message broker.
+-   **Redis**: In-memory data store for job status.
+-   **Dockerode**: Node.js library to control Docker.
 
-## Quickstart
+### Infrastructure
+-   **Docker & Docker Compose**: Container orchestration.
+-   **NGINX**: API Gateway and Load Balancer.
 
-Prerequisites
-- Docker
-- Docker Compose
+## 🏁 Getting Started
 
-1. Clone the repository
-```bash
-git clone https://github.com/ningaraddi-raddi/Remote-Code-Executor.git
-cd Remote-Code-Executor
+### Prerequisites
+-   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Must be running)
+-   [Node.js](https://nodejs.org/) (v18+ recommended)
+
+### Installation & Running
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/ningaraddi-raddi/Remote-Code-Executor.git
+    cd Remote-Code-Executor
+    ```
+
+2.  **Start Backend Services** (Docker)
+    This starts Redis, RabbitMQ, API Service, Worker Service, and Nginx.
+    ```bash
+    docker-compose up -d --build
+    ```
+    *Wait a few moments for RabbitMQ and other services to initialize.*
+
+3.  **Start Frontend** (Local Dev Server)
+    Open a new terminal configuration.
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+
+4.  **Access the Application**
+    -   **Web UI**: Open [http://localhost:5173](http://localhost:5173) in your browser.
+    -   **API**: Accessible at [http://localhost:8080/api](http://localhost:8080/api).
+
+## 📂 Project Structure
+
+```text
+remote-code-executor/
+├── api-service/          # Node.js API (Producer)
+│   └── src/index.js      # API Routes (/execute, /status)
+├── worker-service/       # Node.js Worker (Consumer)
+│   └── src/index.js      # Docker execution logic
+├── gateway/              # NGINX Configuration
+│   └── nginx.conf        # Routing & CORS rules
+├── frontend/             # React Application
+│   ├── src/
+│   │   ├── components/   # Editor, Terminal, LanguageSelector
+│   │   ├── api/          # API integration
+│   │   └── App.jsx       # Main layout & logic
+│   └── tailwind.config.js
+└── docker-compose.yml    # Service orchestration
 ```
 
-2. Build and start all services
-```bash
-docker-compose up --build
-```
+## 🔌 API Reference
 
-The API will be available at: http://localhost:8080
-
-(If you wish to run services detached: docker-compose up -d --build)
-
-## API
-
-Base: http://localhost:8080
-
-1. Submit Code for Execution
-- Endpoint: POST /api/execute
-- Request (JSON)
+### `POST /job` (via Gateway `/api/execute`)
+Submit code for execution.
+**Body:**
 ```json
 {
   "language": "python",
-  "code": "print('Hello from the sandbox!')"
+  "code": "print('Hello World')"
 }
 ```
 
-- Response (success)
+### `GET /status/:jobId` (via Gateway `/api/status/:jobId`)
+Check the execution status.
+**Response:**
 ```json
 {
-  "jobId": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "Pending",
-  "message": "Job submitted successfully"
+  "status": "Completed", 
+  "output": "Hello World\n",
+  "submittedAt": "..."
 }
 ```
 
-2. Check Job Status
-- Endpoint: GET /api/status/:jobId
+## 🛡 Security Measures
+-   **Network Isolation**: Docker containers run with `network_mode: none`.
+-   **Resource Limits**: Containers are capped at 128MB RAM and 1 CPU core via `docker-compose` and Worker logic.
+-   **Timeouts**: Execution is forcibly terminated after a set duration to prevent infinite loops.
+-   **Read-Only Filesystem**: (Optional configuration) prevents malicious writes.
 
-- Response (Processing)
-```json
-{ "status": "Processing" }
-```
+## 🤝 Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-- Response (Completed)
-```json
-{
-  "status": "Completed",
-  "output": "Hello from the sandbox!\n",
-  "submittedAt": "2025-11-30T10:00:00.000Z"
-}
-```
-Notes
-- The API returns a jobId which you can poll via the /api/status endpoint.
-- For large outputs or logs you may store truncated or paginated results to Redis or a blob storage.
-
-## Project Structure
-
-```
-remote-code-executor/
-├── api-service/          # Express API (producer)
-├── worker-service/       # Worker + Docker execution logic (consumer)
-├── gateway/              # NGINX reverse proxy
-├── docker-compose.yml    # Orchestrates all services
-└── README.md             # Documentation
-
-```
-
-## How it works (Simplified)
-
-1. User submits code to the API
-2. API validates input, generates a jobId, and stores a Pending state in Redis
-3. API serializes the job and pushes it to RabbitMQ
-4. Worker picks up the job, spins up a Docker container with strict limits (--network=none, CPU/memory caps)
-5. Worker executes the code inside the container, captures stdout/stderr and exit code
-6. Worker updates Redis with the result and final status (Completed/Failed)
-7. Client polls /api/status/:jobId to get outputs and status
-
-## Configuration & Environment
-
-Example configs (docker-compose, environment variables) live in the repository. Key items to configure:
-- RabbitMQ host/credentials
-- Redis host/credentials
-- Execution timeouts and resource caps
-- Worker concurrency / Docker runtime options
-
-## Future improvements
-
-- WebSockets for real-time execution logs
-- Warm container pools to reduce cold-start latency
-- JWT-based authentication & rate limiting
-- Support for more languages: C/C++, Java, Go, Rust
-- Multi-file project execution and volume-based file imports
-- Per-user execution quotas and billing
-
-## Contributing
-
-Pull requests and suggestions are welcome. Please:
-- Open an issue to discuss larger changes
-- Add tests for new features
-- Keep container and host security in mind
-
-## License
-
-This project is open-source and available under the MIT License.
-
-
+## 📄 License
+[MIT](https://choosealicense.com/licenses/mit/)
